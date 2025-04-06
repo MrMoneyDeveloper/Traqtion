@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
+  standalone: false,
   template: `
     <h2>Login</h2>
     <form (ngSubmit)="onLogin()" #loginForm="ngForm">
