@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Tq.Api.Data;
 using Tq.Api.Models;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Tq.Api.Controllers
 {
@@ -18,8 +20,8 @@ namespace Tq.Api.Controllers
         // GET: api/persons
         [HttpGet]
         public ActionResult<IEnumerable<Person>> GetPersons()
-        {
-            // Include Accounts (and Transactions if you want)
+         {
+            // Include Accounts and their Transactions
             var persons = _context.Persons
                                   .Include(p => p.Accounts)
                                   .ThenInclude(a => a.Transactions)
@@ -27,7 +29,7 @@ namespace Tq.Api.Controllers
             return Ok(persons);
         }
 
-        // GET: api/persons/5
+        // GET: api/persons/{id}
         [HttpGet("{id}")]
         public ActionResult<Person> GetPerson(int id)
         {
@@ -45,6 +47,7 @@ namespace Tq.Api.Controllers
         [HttpPost]
         public IActionResult CreatePerson([FromBody] Person person)
         {
+            // Check for unique ID Number
             if (_context.Persons.Any(p => p.IdNumber == person.IdNumber))
             {
                 return BadRequest("A person with this ID number already exists.");
@@ -55,7 +58,7 @@ namespace Tq.Api.Controllers
             return CreatedAtAction(nameof(GetPerson), new { id = person.PersonId }, person);
         }
 
-        // PUT: api/persons/5
+        // PUT: api/persons/{id}
         [HttpPut("{id}")]
         public IActionResult UpdatePerson(int id, [FromBody] Person updated)
         {
@@ -63,7 +66,7 @@ namespace Tq.Api.Controllers
             if (existing == null)
                 return NotFound();
 
-            // Update fields
+            // Update person details
             existing.FirstName = updated.FirstName;
             existing.LastName = updated.LastName;
             existing.IdNumber = updated.IdNumber;
@@ -73,7 +76,7 @@ namespace Tq.Api.Controllers
             return Ok(existing);
         }
 
-        // DELETE: api/persons/5
+        // DELETE: api/persons/{id}
         [HttpDelete("{id}")]
         public IActionResult DeletePerson(int id)
         {
@@ -84,7 +87,7 @@ namespace Tq.Api.Controllers
             if (person == null)
                 return NotFound();
 
-            // Rule: can only delete if no open accounts
+            // Rule: Only allow deletion if there are no open accounts
             if (person.Accounts.Any(a => a.Status == AccountStatus.Open))
             {
                 return BadRequest("Cannot delete a person who has open accounts.");
@@ -93,6 +96,27 @@ namespace Tq.Api.Controllers
             _context.Persons.Remove(person);
             _context.SaveChanges();
             return NoContent();
+        }
+
+        // GET: api/persons/search?term=...
+        [HttpGet("search")]
+        public ActionResult<IEnumerable<Person>> SearchPersons([FromQuery] string term)
+        {
+            if (string.IsNullOrEmpty(term))
+                return Ok(_context.Persons.Include(p => p.Accounts).ToList());
+
+            term = term.ToLower();
+            // Search in ID Number, LastName, or within related Accounts by AccountNumber
+            var query = _context.Persons
+                .Include(p => p.Accounts)
+                .Where(p =>
+                    p.IdNumber.ToLower().Contains(term) ||
+                    p.LastName.ToLower().Contains(term) ||
+                    p.Accounts.Any(a => a.AccountNumber.ToLower().Contains(term))
+                );
+
+            var results = query.ToList();
+            return Ok(results);
         }
     }
 }

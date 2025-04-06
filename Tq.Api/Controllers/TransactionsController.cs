@@ -2,6 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Tq.Api.Data;
 using Tq.Api.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Tq.Api.Controllers
 {
@@ -20,54 +23,54 @@ namespace Tq.Api.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Transaction>> GetTransactions()
         {
-            var txns = _context.Transactions
+            var transactions = _context.Transactions
                 .Include(t => t.Account)
                 .ToList();
-            return Ok(txns);
+            return Ok(transactions);
         }
 
-        // GET: api/transactions/5
+        // GET: api/transactions/{id}
         [HttpGet("{id}")]
         public ActionResult<Transaction> GetTransaction(int id)
         {
-            var txn = _context.Transactions
+            var transaction = _context.Transactions
                 .Include(t => t.Account)
                 .FirstOrDefault(t => t.TransactionId == id);
-            if (txn == null)
-                return NotFound();
 
-            return Ok(txn);
+            if (transaction == null)
+                return NotFound("Transaction not found.");
+
+            return Ok(transaction);
         }
 
         // POST: api/transactions
         [HttpPost]
         public IActionResult CreateTransaction([FromBody] Transaction model)
         {
-            // Check account
-            var account = _context.Accounts
-                .FirstOrDefault(a => a.AccountId == model.AccountId);
-
-            if (account == null)
-                return BadRequest("Account does not exist.");
-
-            // If account is Closed, block new transactions
-            if (account.Status == AccountStatus.Closed)
-                return BadRequest("Cannot add transactions to a closed account.");
-
-            // Validate transaction date
+            // Validate transaction date is not in the future.
             if (model.TransactionDate.Date > DateTime.Today)
                 return BadRequest("Transaction date cannot be in the future.");
 
+            // Validate non-zero transaction amount.
             if (model.Amount == 0)
-                return BadRequest("Amount cannot be zero.");
+                return BadRequest("Transaction amount cannot be zero.");
 
-            // Set capture date
+            // Always set the CaptureDate to the current time.
             model.GetType().GetProperty("CaptureDate")?.SetValue(model, DateTime.Now);
 
-            // Insert transaction
+            // Check that the account exists.
+            var account = _context.Accounts.FirstOrDefault(a => a.AccountId == model.AccountId);
+            if (account == null)
+                return BadRequest("Account does not exist.");
+
+            // Prevent transactions on a closed account.
+            if (account.Status == AccountStatus.Closed)
+                return BadRequest("Cannot add transactions to a closed account.");
+
+            // Insert transaction.
             _context.Transactions.Add(model);
 
-            // Update account balance
+            // Update account balance using credit/debit logic.
             decimal newBalance = account.OutstandingBalance;
             if (model.Type.Equals("Credit", StringComparison.OrdinalIgnoreCase))
             {
@@ -82,91 +85,90 @@ namespace Tq.Api.Controllers
                 return BadRequest("Transaction Type must be 'Debit' or 'Credit'.");
             }
 
-            // Save changes
             account.GetType().GetProperty("OutstandingBalance")?.SetValue(account, newBalance);
             _context.SaveChanges();
 
             return CreatedAtAction(nameof(GetTransaction), new { id = model.TransactionId }, model);
         }
 
-        // PUT: api/transactions/5
+        // PUT: api/transactions/{id}
         [HttpPut("{id}")]
         public IActionResult UpdateTransaction(int id, [FromBody] Transaction updated)
         {
-            var txn = _context.Transactions
+            var transaction = _context.Transactions
                 .Include(t => t.Account)
                 .FirstOrDefault(t => t.TransactionId == id);
 
-            if (txn == null)
+            if (transaction == null)
                 return NotFound("Transaction not found.");
 
-            var account = txn.Account;
+            var account = transaction.Account;
             if (account == null)
                 return BadRequest("Transaction is linked to no account.");
 
-            // If account closed, no updates allowed
+            // Prevent updates if the account is closed.
             if (account.Status == AccountStatus.Closed)
                 return BadRequest("Cannot modify a transaction on a closed account.");
 
-            // Validate new date
+            // Validate new transaction date.
             if (updated.TransactionDate.Date > DateTime.Today)
                 return BadRequest("Transaction date cannot be in the future.");
 
-            // Revert old amount
+            // Revert the impact of the existing transaction on the account balance.
             decimal newBalance = account.OutstandingBalance;
-            if (txn.Type.Equals("Credit", StringComparison.OrdinalIgnoreCase))
-                newBalance -= txn.Amount;
-            else
-                newBalance += txn.Amount;
+            if (transaction.Type.Equals("Credit", StringComparison.OrdinalIgnoreCase))
+                newBalance -= transaction.Amount;
+            else if (transaction.Type.Equals("Debit", StringComparison.OrdinalIgnoreCase))
+                newBalance += transaction.Amount;
 
-            // Now apply new type & amount
-            txn.TransactionDate = updated.TransactionDate;
-            txn.Description = updated.Description;
-            txn.Type = updated.Type;
-            txn.Amount = updated.Amount;
+            // Update transaction fields.
+            transaction.TransactionDate = updated.TransactionDate;
+            transaction.Description = updated.Description;
+            transaction.Type = updated.Type;
+            transaction.Amount = updated.Amount;
+            transaction.GetType().GetProperty("CaptureDate")?.SetValue(transaction, DateTime.Now);
 
-            // Reset capture date to "now"
-            txn.GetType().GetProperty("CaptureDate")?.SetValue(txn, DateTime.Now);
-
-            // Re-apply updated type/amount
-            if (txn.Type.Equals("Credit", StringComparison.OrdinalIgnoreCase))
-                newBalance += txn.Amount;
-            else if (txn.Type.Equals("Debit", StringComparison.OrdinalIgnoreCase))
-                newBalance -= txn.Amount;
+            // Reapply new transaction impact.
+            if (transaction.Type.Equals("Credit", StringComparison.OrdinalIgnoreCase))
+                newBalance += transaction.Amount;
+            else if (transaction.Type.Equals("Debit", StringComparison.OrdinalIgnoreCase))
+                newBalance -= transaction.Amount;
             else
                 return BadRequest("Transaction Type must be 'Debit' or 'Credit'.");
 
-            // Save to DB
             account.GetType().GetProperty("OutstandingBalance")?.SetValue(account, newBalance);
             _context.SaveChanges();
 
-            return Ok(txn);
+            return Ok(transaction);
         }
 
-        // DELETE: api/transactions/5
+        // DELETE: api/transactions/{id}
         [HttpDelete("{id}")]
         public IActionResult DeleteTransaction(int id)
         {
-            var txn = _context.Transactions
+            var transaction = _context.Transactions
                 .Include(t => t.Account)
                 .FirstOrDefault(t => t.TransactionId == id);
 
-            if (txn == null)
-                return NotFound();
+            if (transaction == null)
+                return NotFound("Transaction not found.");
 
-            var account = txn.Account!;
-            // If closed, cannot remove old transactions. (Up to your business rules).
+            var account = transaction.Account;
+            if (account == null)
+                return BadRequest("Transaction is linked to no account.");
+
+            // Prevent deletion if the account is closed.
             if (account.Status == AccountStatus.Closed)
                 return BadRequest("Cannot delete transaction from a closed account.");
 
-            // Adjust account balance
+            // Adjust account balance before deletion.
             decimal newBalance = account.OutstandingBalance;
-            if (txn.Type.Equals("Credit", StringComparison.OrdinalIgnoreCase))
-                newBalance -= txn.Amount;
-            else
-                newBalance += txn.Amount;
+            if (transaction.Type.Equals("Credit", StringComparison.OrdinalIgnoreCase))
+                newBalance -= transaction.Amount;
+            else if (transaction.Type.Equals("Debit", StringComparison.OrdinalIgnoreCase))
+                newBalance += transaction.Amount;
 
-            _context.Transactions.Remove(txn);
+            _context.Transactions.Remove(transaction);
             account.GetType().GetProperty("OutstandingBalance")?.SetValue(account, newBalance);
             _context.SaveChanges();
 

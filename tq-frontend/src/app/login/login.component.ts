@@ -50,7 +50,7 @@ export class LoginComponent {
 
   onLogin() {
     // For Phase 1, call POST /api/login with { username, password }
-    this.http.post<any>('https://localhost:5001/api/login', {
+    this.http.post<any>('http://localhost:5001/api/login', {
       username: this.username,
       password: this.password
     }).subscribe({

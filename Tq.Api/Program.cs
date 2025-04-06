@@ -1,28 +1,37 @@
 using Tq.Api.Data;
-using Microsoft.EntityFrameworkCore; // This gives us UseSqlServer & Migrate
-
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add EF Core
+// Register EF Core with SQL Server using the connection string from configuration.
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    ));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add controllers, minimal for Phase 1
+// Add controllers (minimal setup for Phase 1)
 builder.Services.AddControllers();
 
+// Configure CORS policy for Angular development.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularDev", policy =>
+        policy.WithOrigins("http://localhost:63528")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 var app = builder.Build();
+
+// Use the CORS policy.
+app.UseCors("AllowAngularDev");
+
+// Map controller endpoints.
 app.MapControllers();
 
-// Migrate & seed on startup
+// Apply pending migrations and seed the database.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
-
-    // Optional: call a seeding method
     SeedData.Initialize(db);
 }
 
