@@ -25,7 +25,6 @@ import { ContactComponent } from './contact/contact.component';
   declarations: [
     AppComponent,
     HomeComponent,
-    LoginComponent,
     PersonsListComponent
     // 🚫 Do not declare standalone components
   ],
@@ -37,6 +36,7 @@ import { ContactComponent } from './contact/contact.component';
     AppRoutingModule,
 
     // ✅ Standalone component imports
+    LoginComponent,
     LogoutComponent,
     PersonDetailComponent,
     PersonCreateComponent,

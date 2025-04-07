@@ -5,7 +5,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
   selector: 'app-home',
   template: `
     <div class="home-container">
-      <!-- Hero Section with Parallax Background and Fade-In Animation -->
+      <!-- Hero Section -->
       <section class="hero-section" [@fadeIn]>
         <div class="hero-overlay"></div>
         <div class="hero-content">
@@ -19,24 +19,30 @@ import { trigger, transition, style, animate } from '@angular/animations';
         </div>
       </section>
 
-      <!-- Features Section with Slide-Up Animation -->
+      <!-- Features Section -->
       <section class="features-section" [@slideUp]>
         <div class="container">
           <h2>Why Choose Traq?</h2>
           <p class="lead">Experience efficiency, real-time insights, and exceptional support that elevates your business.</p>
           <div class="row text-center">
-            <div class="col-md-4 feature">
-              <i class="fa fa-users fa-3x"></i>
+            <div class="col-md-4 feature feature-gradient-1">
+              <div class="icon-box">
+                <i class="fa fa-users fa-3x"></i>
+              </div>
               <h3>User Management</h3>
               <p>Effortlessly manage people and accounts with our intuitive interface.</p>
             </div>
-            <div class="col-md-4 feature">
-              <i class="fa fa-exchange-alt fa-3x"></i>
+            <div class="col-md-4 feature feature-gradient-2">
+              <div class="icon-box">
+                <i class="fa fa-exchange-alt fa-3x"></i>
+              </div>
               <h3>Transaction Control</h3>
               <p>Keep track of all financial activities with precision and ease.</p>
             </div>
-            <div class="col-md-4 feature">
-              <i class="fa fa-cogs fa-3x"></i>
+            <div class="col-md-4 feature feature-gradient-3">
+              <div class="icon-box">
+                <i class="fa fa-cogs fa-3x"></i>
+              </div>
               <h3>Customizable Workflow</h3>
               <p>Tailor the system to fit your unique business processes.</p>
             </div>
@@ -50,10 +56,10 @@ import { trigger, transition, style, animate } from '@angular/animations';
       font-family: 'Roboto', sans-serif;
       overflow: hidden;
     }
-    /* Hero Section Styles */
+
+    /* Hero Section */
     .hero-section {
       position: relative;
-      /* Use absolute path with a leading slash so that Angular resolves from the root */
       background: url('/assets/home-bg') no-repeat center center;
       background-size: cover;
       padding: 150px 20px;
@@ -62,10 +68,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
     }
     .hero-overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: rgba(0, 0, 0, 0.6);
     }
     .hero-content {
@@ -90,28 +93,60 @@ import { trigger, transition, style, animate } from '@angular/animations';
       font-size: 1.25rem;
       margin-bottom: 30px;
     }
-    /* Features Section Styles */
+
+    /* Features Section */
     .features-section {
-      background: #f8f9fa;
-      color: #333;
-      padding: 60px 20px;
+      padding: 80px 20px;
+      background: linear-gradient(to right, #f8f9fa, #e9ecef);
+      color: #343a40;
     }
     .features-section h2 {
-      color: #333;
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .features-section .lead {
+      font-size: 1.2rem;
+      margin-bottom: 40px;
+    }
+
+    .feature {
+      padding: 30px 20px;
+      border-radius: 10px;
+      color: #fff;
+      margin-bottom: 30px;
+    }
+
+    .icon-box {
       margin-bottom: 20px;
     }
-    .feature {
-      margin-bottom: 30px;
-      padding: 20px;
+
+    /* Gradient styles for color separation */
+    .feature-gradient-1 {
+      background: linear-gradient(135deg, #007bff, #00c6ff);
     }
-    .feature i {
-      color: #007bff;
-      margin-bottom: 15px;
+    .feature-gradient-2 {
+      background: linear-gradient(135deg, #28a745, #7ed56f);
     }
-    @media (max-width: 767px) {
+    .feature-gradient-3 {
+      background: linear-gradient(135deg, #6f42c1, #b983ff);
+    }
+
+    .feature h3 {
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    .feature p {
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
       .hero-title { font-size: 2.5rem; }
       .hero-subtitle { font-size: 1.25rem; }
       .hero-description { font-size: 1rem; }
+      .features-section h2 { font-size: 2rem; }
     }
   `],
   animations: [

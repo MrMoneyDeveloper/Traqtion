@@ -36,7 +36,7 @@ export class PersonCreateComponent {
 
     this.personService.createPerson(this.person).subscribe({
       next: () => this.router.navigate(['/persons']),
-      error: (err) => {
+      error: (err: any) => {
         this.isSubmitting = false;
         this.errorMessage = err?.error || 'Failed to create person.';
       }

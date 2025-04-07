@@ -1,54 +1,97 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, catchError, throwError } from 'rxjs';
 
 export interface LoginResponse {
   token: string;
-  // Additional properties can be added here if needed.
+  // Extend with optional fields: username?: string, roles?: string[], etc.
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // Base URL for your API; adjust as needed.
-  private apiUrl = 'http://localhost:5001/api';
+  private readonly apiUrl = 'http://localhost:5001/api';
+  private readonly tokenKey = 'token';
+  private readonly useSessionStorage = true; // Toggle between session/local
 
   constructor(private http: HttpClient) { }
 
   /**
-   * Performs login by sending credentials to the backend.
-   * Returns an Observable emitting a typed LoginResponse.
-   * On success, the token is automatically stored in sessionStorage.
+   * Logs in user by sending credentials to the backend.
+   * Matches .NET PascalCase expectations.
    */
   login(username: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, { username, password })
-      .pipe(
-        tap(response => {
-          // Store the token in sessionStorage for session-based authentication.
-          sessionStorage.setItem('token', response.token);
-        })
-      );
+    const payload = { Username: username, Password: password };
+
+    console.debug('[AuthService] Sending login request:', payload);
+
+    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, payload).pipe(
+      tap(res => {
+        if (res?.token) {
+          this.storeToken(res.token);
+          console.debug('[AuthService] Login successful. Token stored.');
+        } else {
+          console.warn('[AuthService] Login response missing token.');
+        }
+      }),
+      catchError(err => {
+        const msg = err?.error?.message || 'Invalid credentials or network issue';
+        console.error('[AuthService] Login failed:', msg);
+        return throwError(() => new Error(msg));
+      })
+    );
   }
 
   /**
-   * Logs out the current user by removing the stored token.
+   * Logs the user out by clearing token.
    */
   logout(): void {
-    sessionStorage.removeItem('token');
+    this.clearToken();
+    console.info('[AuthService] User logged out. Token removed.');
   }
 
   /**
-   * Checks if the user is authenticated by verifying the presence of a token.
+   * Checks if a token is present, indicating authentication.
    */
   isAuthenticated(): boolean {
-    return !!sessionStorage.getItem('token');
+    return !!this.getToken();
   }
 
   /**
-   * Retrieves the stored authentication token.
+   * Retrieves the stored JWT token.
    */
   getToken(): string | null {
-    return sessionStorage.getItem('token');
+    return this.useSessionStorage
+      ? sessionStorage.getItem(this.tokenKey)
+      : localStorage.getItem(this.tokenKey);
   }
+
+  /**
+   * Stores the token using chosen storage strategy.
+   */
+  private storeToken(token: string): void {
+    if (this.useSessionStorage) {
+      sessionStorage.setItem(this.tokenKey, token);
+    } else {
+      localStorage.setItem(this.tokenKey, token);
+    }
+  }
+
+  /**
+   * Clears the stored token.
+   */
+  private clearToken(): void {
+    sessionStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.tokenKey);
+  }
+
+  /**
+   * Optional future: Decode JWT (requires jwt-decode package)
+   */
+  // decodeToken(): any {
+  //   const token = this.getToken();
+  //   if (!token) return null;
+  //   return jwtDecode(token);
+  // }
 }

@@ -1,0 +1,106 @@
+<div id="aboutCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+  <!-- Indicators -->
+  <div class="carousel-indicators">
+    <button type="button" data-bs-target="#aboutCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+    <button type="button" data-bs-target="#aboutCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+    <button type="button" data-bs-target="#aboutCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+  </div>
+
+  <!-- Carousel Slides -->
+  <div class="carousel-inner">
+    <!-- Slide 1 -->
+    <div class="carousel-item active">
+      <div class="carousel-bg"></div>
+      <div class="carousel-content">
+        <h2>About Me</h2>
+        <p>I’m a Junior IT Applications Support Specialist experienced in .NET, Node.js, MSSQL, and Python.</p>
+        <p>I led a dev team at DUT to build a document management system, and I’ve worked on ERP and internal IT tools for process efficiency.</p>
+      </div>
+    </div>
+
+    <!-- Slide 2 -->
+    <div class="carousel-item">
+      <div class="carousel-bg"></div>
+      <div class="carousel-content">
+        <h2>EasyGamesProjectV2</h2>
+        <p>A JS + .NET dev test project with balance tracking, sorting, and responsive design. Built for assessment using best practices.</p>
+        <a href="https://github.com/MrMoneyDeveloper/EasyGamesProjectV2" target="_blank" class="btn btn-outline-light mt-3">View on GitHub</a>
+      </div>
+    </div>
+
+    <!-- Slide 3 -->
+    <div class="carousel-item">
+      <div class="carousel-bg"></div>
+      <div class="carousel-content">
+        <h2>RNR – Breakdown Management</h2>
+        <p>Built with ASP.NET Core + React, this system manages vehicle breakdowns with CRUD, pagination, and validation.</p>
+        <a href="https://github.com/MrMoneyDeveloper/RNR" target="_blank" class="btn btn-outline-light mt-3">View on GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <button class="carousel-control-prev" type="button" data-bs-target="#aboutCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#aboutCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>
+
+<style>
+  /* Base Carousel Style */
+  #aboutCarousel {
+    margin-top: 2rem;
+  }
+
+  .carousel-item {
+    position: relative;
+    min-height: 65vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    background-color: #1e1e1e;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .carousel-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 0;
+  }
+
+  .carousel-content {
+    position: relative;
+    z-index: 2;
+    max-width: 700px;
+    padding: 2rem;
+  }
+
+    .carousel-content h2 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .carousel-content p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+  @media (max-width: 768px) {
+    .carousel-content h2 {
+      font-size: 1.5rem;
+    }
+
+    .carousel-content p {
+      font-size: 1rem;
+    }
+  }
+</style>

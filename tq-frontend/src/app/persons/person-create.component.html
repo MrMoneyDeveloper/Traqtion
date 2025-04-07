@@ -26,7 +26,7 @@
       <input type="date" class="form-control" id="dateOfBirth" [(ngModel)]="person.dateOfBirth" name="dateOfBirth" required>
     </div>
 
-    <button type="submit" class="btn btn-primary">Create</button>
-    <button type="button" class="btn btn-secondary ms-2" (click)="goBack()">Cancel</button>
+    <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">Create</button>
+    <button type="button" class="btn btn-secondary ms-2" (click)="goBack()" [disabled]="isSubmitting">Cancel</button>
   </form>
 </div>

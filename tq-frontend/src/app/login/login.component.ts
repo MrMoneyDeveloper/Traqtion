@@ -1,51 +1,15 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
-  standalone: false,
-  template: `
-    <h2>Login</h2>
-    <form (ngSubmit)="onLogin()" #loginForm="ngForm">
-      <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
-        <input 
-          id="username"
-          name="username"
-          [(ngModel)]="username" 
-          class="form-control"
-          required 
-          [disabled]="isLoading"
-        />
-      </div>
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input 
-          id="password"
-          name="password"
-          type="password"
-          [(ngModel)]="password" 
-          class="form-control"
-          required 
-          [disabled]="isLoading"
-        />
-      </div>
-      <button 
-        class="btn btn-primary"
-        type="submit"
-        [disabled]="loginForm.invalid || isLoading"
-      >
-        Login
-      </button>
-    </form>
-    <div *ngIf="errorMessage" class="text-danger mt-2">
-      {{ errorMessage }}
-    </div>
-    <div *ngIf="isLoading" class="mt-2">
-      Loading...
-    </div>
-  `
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './login.component.html'
 })
 export class LoginComponent {
   username = '';
@@ -53,24 +17,31 @@ export class LoginComponent {
   errorMessage = '';
   isLoading = false;
 
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) { }
 
   onLogin(): void {
+    if (this.isLoading || !this.username || !this.password) return;
+
     this.errorMessage = '';
     this.isLoading = true;
-    // Call the AuthService to perform login.
-    this.authService.login(this.username, this.password).subscribe({
+
+    console.debug('[LoginComponent] Attempting login for user:', this.username);
+
+    this.authService.login(this.username, this.password).pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
       next: (res) => {
-        // On success, store token and navigate to the protected route.
-        localStorage.setItem('token', res.token || '');
+        console.debug('[LoginComponent] Login successful:', res);
+        // Consistent with AuthService (sessionStorage-based)
+        sessionStorage.setItem('token', res.token || '');
         this.router.navigate(['/persons']);
       },
       error: (err) => {
-        // Try to extract a meaningful error message.
-        this.errorMessage = err.error ? (err.error.message || err.error) : 'Invalid credentials';
-      },
-      complete: () => {
-        this.isLoading = false;
+        console.error('[LoginComponent] Login failed:', err);
+        this.errorMessage = err.message || 'Login failed. Please check your credentials.';
       }
     });
   }

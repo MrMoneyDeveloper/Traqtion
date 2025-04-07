@@ -1,0 +1,71 @@
+<div class="login-page d-flex justify-content-center align-items-center">
+  <div class="card p-4 shadow login-card">
+    <h2 class="text-center mb-4">Sign In</h2>
+
+    <form (ngSubmit)="onLogin()" #loginForm="ngForm" novalidate>
+      <!-- Username -->
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input id="username"
+               name="username"
+               [(ngModel)]="username"
+               type="text"
+               class="form-control"
+               required
+               [disabled]="isLoading"
+               [ngClass]="{ 'is-invalid': loginForm.submitted && !username }" />
+        <div *ngIf="loginForm.submitted && !username" class="invalid-feedback">
+          Username is required.
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input id="password"
+               name="password"
+               [(ngModel)]="password"
+               type="password"
+               class="form-control"
+               required
+               [disabled]="isLoading"
+               [ngClass]="{ 'is-invalid': loginForm.submitted && !password }" />
+        <div *ngIf="loginForm.submitted && !password" class="invalid-feedback">
+          Password is required.
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button class="btn btn-primary w-100"
+              type="submit"
+              [disabled]="loginForm.invalid || isLoading">
+        {{ isLoading ? 'Logging in...' : 'Login' }}
+      </button>
+    </form>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-danger text-center mt-3">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="isLoading" class="text-center mt-3">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+  
+</div>
+<style>
+
+  .login-card {
+    max-width: 400px;
+    width: 100%;
+    border-radius: 1rem;
+  }
+
+  .invalid-feedback {
+    display: block;
+  }
+</style>

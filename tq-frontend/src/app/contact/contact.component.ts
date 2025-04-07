@@ -1,7 +1,13 @@
+// contact.component.ts
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-contact',
-  template: `<h2>Contact Page</h2><p>Contact details go here.</p>`
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './contact.component.html'
 })
-export class ContactComponent { }
+export class ContactComponent {
+  // No dynamic logic required for contact info
+}

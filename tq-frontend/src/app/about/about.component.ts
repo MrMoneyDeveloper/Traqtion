@@ -1,10 +1,13 @@
+// about.component.ts
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-about',
-  template: `
-    <h2>About</h2>
-    <p>This is the About page.</p>
-  `
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './about.component.html'
 })
-export class AboutComponent { }
+export class AboutComponent {
+  // No additional logic needed for this static page
+}
