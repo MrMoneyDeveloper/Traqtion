@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ import { HttpClient } from '@angular/common/http';
           [(ngModel)]="username" 
           class="form-control"
           required 
+          [disabled]="isLoading"
         />
       </div>
       <div class="mb-3">
@@ -26,12 +28,13 @@ import { HttpClient } from '@angular/common/http';
           [(ngModel)]="password" 
           class="form-control"
           required 
+          [disabled]="isLoading"
         />
       </div>
       <button 
         class="btn btn-primary"
         type="submit"
-        [disabled]="loginForm.invalid"
+        [disabled]="loginForm.invalid || isLoading"
       >
         Login
       </button>
@@ -39,29 +42,35 @@ import { HttpClient } from '@angular/common/http';
     <div *ngIf="errorMessage" class="text-danger mt-2">
       {{ errorMessage }}
     </div>
+    <div *ngIf="isLoading" class="mt-2">
+      Loading...
+    </div>
   `
 })
 export class LoginComponent {
   username = '';
   password = '';
   errorMessage = '';
+  isLoading = false;
 
-  constructor(private http: HttpClient) { }
+  constructor(private authService: AuthService, private router: Router) { }
 
-  onLogin() {
-    // For Phase 1, call POST /api/login with { username, password }
-    this.http.post<any>('http://localhost:5001/api/login', {
-      username: this.username,
-      password: this.password
-    }).subscribe({
+  onLogin(): void {
+    this.errorMessage = '';
+    this.isLoading = true;
+    // Call the AuthService to perform login.
+    this.authService.login(this.username, this.password).subscribe({
       next: (res) => {
-        // store token or do something
+        // On success, store token and navigate to the protected route.
         localStorage.setItem('token', res.token || '');
-        this.errorMessage = '';
-        alert('Logged in successfully!');
+        this.router.navigate(['/persons']);
       },
       error: (err) => {
-        this.errorMessage = err.error || 'Invalid credentials';
+        // Try to extract a meaningful error message.
+        this.errorMessage = err.error ? (err.error.message || err.error) : 'Invalid credentials';
+      },
+      complete: () => {
+        this.isLoading = false;
       }
     });
   }

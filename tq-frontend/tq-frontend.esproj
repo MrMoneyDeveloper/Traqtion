@@ -9,7 +9,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="src\app\accounts\" />
-    <Folder Include="src\app\core\" />
-    <Folder Include="src\assets\" />
+    <Folder Include="src\app\logout\" />
   </ItemGroup>
 </Project>

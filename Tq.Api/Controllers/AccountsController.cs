@@ -18,82 +18,96 @@ namespace Tq.Api.Controllers
 
         // GET: api/accounts
         [HttpGet]
-        public ActionResult<IEnumerable<Account>> GetAccounts()
+        public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
         {
-            var accounts = _context.Accounts
+            var accounts = await _context.Accounts
                 .Include(a => a.Person)
                 .Include(a => a.Transactions)
-                .ToList();
+                .ToListAsync();
             return Ok(accounts);
         }
 
-        // GET: api/accounts/5
+        // GET: api/accounts/{id}
         [HttpGet("{id}")]
-        public ActionResult<Account> GetAccount(int id)
+        public async Task<ActionResult<Account>> GetAccount(int id)
         {
-            var account = _context.Accounts
+            var account = await _context.Accounts
                 .Include(a => a.Person)
                 .Include(a => a.Transactions)
-                .FirstOrDefault(a => a.AccountId == id);
+                .FirstOrDefaultAsync(a => a.AccountId == id);
 
             if (account == null)
-                return NotFound();
+                return NotFound("Account not found.");
 
             return Ok(account);
         }
 
         // POST: api/accounts
         [HttpPost]
-        public IActionResult CreateAccount([FromBody] Account account)
+        public async Task<IActionResult> CreateAccount([FromBody] Account account)
         {
-            // Check Person exists
-            var person = _context.Persons.Find(account.PersonId);
+            // Verify that the Person exists.
+            var person = await _context.Persons.FindAsync(account.PersonId);
             if (person == null)
                 return BadRequest("Person does not exist.");
 
-            // Unique check for AccountNumber
-            if (_context.Accounts.Any(a => a.AccountNumber == account.AccountNumber))
-                return BadRequest("AccountNumber already in use.");
+            // Ensure the AccountNumber is unique.
+            if (await _context.Accounts.AnyAsync(a => a.AccountNumber == account.AccountNumber))
+                return BadRequest("Account number already in use.");
 
-            // Balance is always 0 on creation, ignoring any inbound attempt
+            // New accounts always start with an outstanding balance of 0.
             account.GetType().GetProperty("OutstandingBalance")?.SetValue(account, 0m);
 
             _context.Accounts.Add(account);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetAccount), new { id = account.AccountId }, account);
         }
 
-        // PUT: api/accounts/5
+        // PUT: api/accounts/{id}
         [HttpPut("{id}")]
-        public IActionResult UpdateAccount(int id, [FromBody] Account updated)
+        public async Task<IActionResult> UpdateAccount(int id, [FromBody] Account updated)
         {
-            var existing = _context.Accounts
+            var existing = await _context.Accounts
                 .Include(a => a.Person)
-                .FirstOrDefault(a => a.AccountId == id);
+                .FirstOrDefaultAsync(a => a.AccountId == id);
 
             if (existing == null)
-                return NotFound();
+                return NotFound("Account not found.");
 
-            // Possibly let user change only status or rename account number etc.
-            // If you do NOT allow changing AccountNumber after creation, skip it:
+            // If AccountNumber is updated, ensure uniqueness.
+            if (!existing.AccountNumber.Equals(updated.AccountNumber, StringComparison.OrdinalIgnoreCase))
+            {
+                if (await _context.Accounts.AnyAsync(a => a.AccountNumber == updated.AccountNumber))
+                    return BadRequest("Account number already in use.");
+                existing.AccountNumber = updated.AccountNumber;
+            }
+
+            // Update account status.
+            // If changing to Closed, ensure OutstandingBalance is zero.
+            if (updated.Status == AccountStatus.Closed && existing.OutstandingBalance != 0m)
+                return BadRequest("Cannot close account when the outstanding balance is not zero.");
+
             existing.Status = updated.Status;
-            // We do NOT allow direct changes to OutstandingBalance
-            // existing.OutstandingBalance = existing.OutstandingBalance;  // no-op
 
-            _context.SaveChanges();
+            // Note: OutstandingBalance is not updated directly.
+            await _context.SaveChangesAsync();
             return Ok(existing);
         }
 
-        // DELETE: api/accounts/5
+        // DELETE: api/accounts/{id}
         [HttpDelete("{id}")]
-        public IActionResult DeleteAccount(int id)
+        public async Task<IActionResult> DeleteAccount(int id)
         {
-            var account = _context.Accounts.Find(id);
+            var account = await _context.Accounts.FindAsync(id);
             if (account == null)
-                return NotFound();
+                return NotFound("Account not found.");
+
+            // Optionally ensure the account balance is zero before deletion.
+            if (account.OutstandingBalance != 0m)
+                return BadRequest("Cannot delete an account with a non-zero outstanding balance.");
 
             _context.Accounts.Remove(account);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return NoContent();
         }
     }

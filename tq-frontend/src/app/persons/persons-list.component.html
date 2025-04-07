@@ -1,25 +1,37 @@
 <div class="container mt-4">
   <h2>Persons List</h2>
 
+  <!-- Search Section -->
   <div class="row mb-3">
     <div class="col-md-4">
-      <input type="text"
-             class="form-control"
-             [(ngModel)]="searchTerm"
-             placeholder="Search by ID, surname, or account #">
+      <input type="text" class="form-control" [(ngModel)]="searchTerm" placeholder="Search by ID, surname, or account #">
     </div>
     <div class="col-md-2">
       <button class="btn btn-primary" (click)="onSearch()">Search</button>
     </div>
+    <div class="col-md-3">
+      <button class="btn btn-success" (click)="createPerson()">Add New Person</button>
+    </div>
   </div>
 
-  <table class="table table-striped">
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="alert alert-info">
+    Loading persons...
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Persons Table -->
+  <table *ngIf="!isLoading && persons.length" class="table table-striped">
     <thead>
       <tr>
         <th>ID Number</th>
         <th>First Name</th>
         <th>Last Name</th>
-        <!-- Optionally, add more columns if needed (e.g. Account #) -->
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -27,7 +39,16 @@
         <td>{{ person.idNumber }}</td>
         <td>{{ person.firstName }}</td>
         <td>{{ person.lastName }}</td>
+        <td>
+          <button class="btn btn-info btn-sm" (click)="editPerson(person.personId)">Edit</button>
+          <button class="btn btn-danger btn-sm" (click)="deletePerson(person.personId)">Delete</button>
+        </td>
       </tr>
     </tbody>
   </table>
+
+  <!-- No Persons Message -->
+  <div *ngIf="!isLoading && persons.length === 0" class="alert alert-warning">
+    No persons found.
+  </div>
 </div>

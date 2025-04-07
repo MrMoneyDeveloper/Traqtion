@@ -20,7 +20,7 @@ namespace Tq.Api.Controllers
         // GET: api/persons
         [HttpGet]
         public ActionResult<IEnumerable<Person>> GetPersons()
-         {
+        {
             // Include Accounts and their Transactions
             var persons = _context.Persons
                                   .Include(p => p.Accounts)
@@ -38,7 +38,7 @@ namespace Tq.Api.Controllers
                                  .ThenInclude(a => a.Transactions)
                                  .FirstOrDefault(x => x.PersonId == id);
             if (person == null)
-                return NotFound();
+                return NotFound("Person not found.");
 
             return Ok(person);
         }
@@ -47,7 +47,7 @@ namespace Tq.Api.Controllers
         [HttpPost]
         public IActionResult CreatePerson([FromBody] Person person)
         {
-            // Check for unique ID Number
+            // Check for unique ID Number.
             if (_context.Persons.Any(p => p.IdNumber == person.IdNumber))
             {
                 return BadRequest("A person with this ID number already exists.");
@@ -64,9 +64,10 @@ namespace Tq.Api.Controllers
         {
             var existing = _context.Persons.Find(id);
             if (existing == null)
-                return NotFound();
+                return NotFound("Person not found.");
 
-            // Update person details
+            // Update person details.
+            // Note: Updating IdNumber should also be validated for uniqueness if allowed.
             existing.FirstName = updated.FirstName;
             existing.LastName = updated.LastName;
             existing.IdNumber = updated.IdNumber;
@@ -85,12 +86,12 @@ namespace Tq.Api.Controllers
                                  .FirstOrDefault(x => x.PersonId == id);
 
             if (person == null)
-                return NotFound();
+                return NotFound("Person not found.");
 
-            // Rule: Only allow deletion if there are no open accounts
-            if (person.Accounts.Any(a => a.Status == AccountStatus.Open))
+            // Use the model's CanBeDeleted helper to enforce deletion rules.
+            if (!person.CanBeDeleted())
             {
-                return BadRequest("Cannot delete a person who has open accounts.");
+                return BadRequest("Cannot delete a person with open accounts.");
             }
 
             _context.Persons.Remove(person);
@@ -103,19 +104,22 @@ namespace Tq.Api.Controllers
         public ActionResult<IEnumerable<Person>> SearchPersons([FromQuery] string term)
         {
             if (string.IsNullOrEmpty(term))
-                return Ok(_context.Persons.Include(p => p.Accounts).ToList());
+            {
+                return Ok(_context.Persons
+                    .Include(p => p.Accounts)
+                    .ToList());
+            }
 
             term = term.ToLower();
-            // Search in ID Number, LastName, or within related Accounts by AccountNumber
-            var query = _context.Persons
+            // Search in IdNumber, LastName, or within related Accounts by AccountNumber.
+            var results = _context.Persons
                 .Include(p => p.Accounts)
                 .Where(p =>
                     p.IdNumber.ToLower().Contains(term) ||
                     p.LastName.ToLower().Contains(term) ||
                     p.Accounts.Any(a => a.AccountNumber.ToLower().Contains(term))
-                );
+                ).ToList();
 
-            var results = query.ToList();
             return Ok(results);
         }
     }
