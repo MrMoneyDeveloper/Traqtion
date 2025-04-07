@@ -12,14 +12,14 @@ import { PersonService, Person } from '../services/persons.service';
       <div *ngIf="isLoading" class="alert alert-info">Loading person details...</div>
       <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
       <div *ngIf="person && !isLoading">
-        <h2>{{ person?.firstName }} {{ person?.lastName }}</h2>
-        <p><strong>ID Number:</strong> {{ person?.idNumber }}</p>
-        <p><strong>Date of Birth:</strong> {{ person?.dateOfBirth | date }}</p>
+        <h2>{{ person.firstName }} {{ person.lastName }}</h2>
+        <p><strong>ID Number:</strong> {{ person.idNumber }}</p>
+        <p><strong>Date of Birth:</strong> {{ person.dateOfBirth | date }}</p>
         <h3>Accounts</h3>
         <ul>
-          <li *ngFor="let account of person?.accounts">
-            {{ account?.accountNumber }} - Status: {{ account?.status }} - 
-            Balance: {{ account?.outstandingBalance | currency }}
+          <li *ngFor="let account of person.accounts">
+            {{ account.accountNumber }} - Status: {{ account.status }} - 
+            Balance: {{ account.outstandingBalance | currency }}
           </li>
         </ul>
         <button class="btn btn-secondary" (click)="goBack()">Back to List</button>
@@ -45,23 +45,25 @@ export class PersonDetailComponent implements OnInit {
   loadPerson(): void {
     this.isLoading = true;
     const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam) {
-      const personId = parseInt(idParam, 10);
-      this.personService.getPerson(personId).subscribe({
-        next: (data) => {
-          this.person = data;
-          this.isLoading = false;
-        },
-        error: (err) => {
-          console.error('Error loading person details', err);
-          this.errorMessage = 'Error loading person details. Please try again later.';
-          this.isLoading = false;
-        }
-      });
-    } else {
-      this.errorMessage = 'Invalid person ID.';
+    const personId = Number(idParam);
+
+    if (!personId || isNaN(personId)) {
+      this.errorMessage = 'Invalid person ID provided.';
       this.isLoading = false;
+      return;
     }
+
+    this.personService.getPerson(personId).subscribe({
+      next: (data) => {
+        this.person = data;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading person details:', err);
+        this.errorMessage = 'Error loading person details. Please try again later.';
+        this.isLoading = false;
+      }
+    });
   }
 
   goBack(): void {

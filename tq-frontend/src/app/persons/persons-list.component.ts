@@ -22,15 +22,16 @@ export class PersonsListComponent implements OnInit {
   loadPersons(): void {
     this.errorMessage = '';
     this.isLoading = true;
+
     this.personService.getPersons().subscribe({
       next: (data: Person[]) => {
         this.persons = data;
         this.isLoading = false;
       },
-      error: (err: any) => {
+      error: () => {
         this.errorMessage = 'Error loading persons. Please try again later.';
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -39,35 +40,53 @@ export class PersonsListComponent implements OnInit {
 
     this.personService.deletePerson(personId).subscribe({
       next: () => this.loadPersons(),
-      error: (err: any) => alert(err.error || 'Error deleting person')
+      error: (err: any) => {
+        const reason =
+          err?.error || 'Could not delete person. Possible open accounts or internal server issue.';
+        alert(`Delete failed: ${reason}`);
+      },
     });
   }
 
   onSearch(): void {
     this.errorMessage = '';
     const term = this.searchTerm.trim();
+
     if (!term) {
       this.loadPersons();
       return;
     }
+
     this.isLoading = true;
     this.personService.searchPersons(term).subscribe({
       next: (data: Person[]) => {
         this.persons = data;
         this.isLoading = false;
       },
-      error: (err: any) => {
+      error: () => {
         this.errorMessage = 'Error searching persons. Please try again later.';
         this.isLoading = false;
-      }
+      },
     });
-  }
-
-  editPerson(personId: number): void {
-    this.router.navigate(['/persons', personId]);
   }
 
   createPerson(): void {
     this.router.navigate(['/persons/create']);
+  }
+
+  editPerson(personId: number): void {
+    if (personId !== undefined && personId !== null) {
+      this.router.navigate(['/persons/edit', personId]);
+    } else {
+      alert('Invalid person ID for edit.');
+    }
+  }
+
+  viewDetails(personId: number): void {
+    if (personId !== undefined && personId !== null) {
+      this.router.navigate(['/persons/details', personId]);
+    } else {
+      alert('Invalid person ID for details.');
+    }
   }
 }

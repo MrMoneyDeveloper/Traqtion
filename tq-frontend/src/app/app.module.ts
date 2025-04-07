@@ -1,32 +1,25 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // Added for animations
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, Routes } from '@angular/router';
 
+import { AppRoutingModule } from './app-routing.module'; // ✅ Correct path
 import { AuthGuard } from './guards/auth.guard';
 
+// Core App Components (non-standalone)
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
 import { PersonsListComponent } from './persons/persons-list.component';
 
-// Import standalone components (do not declare them)
+// Standalone Components (must be imported, not declared)
+import { LogoutComponent } from './logout/logout.component';
 import { PersonDetailComponent } from './persons/person-detail.component';
+import { PersonCreateComponent } from './persons/person-create.component';
+import { PersonEditComponent } from './persons/person-edit.component';
 import { AboutComponent } from './about/about.component';
 import { ContactComponent } from './contact/contact.component';
-
-const routes: Routes = [
-  { path: 'home', component: HomeComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'persons', component: PersonsListComponent, canActivate: [AuthGuard] },
-  { path: 'persons/:id', component: PersonDetailComponent, canActivate: [AuthGuard] },
-  { path: 'about', component: AboutComponent },
-  { path: 'contact', component: ContactComponent },
-  { path: '', redirectTo: '/home', pathMatch: 'full' },
-  { path: '**', redirectTo: '/home' }
-];
 
 @NgModule({
   declarations: [
@@ -34,20 +27,24 @@ const routes: Routes = [
     HomeComponent,
     LoginComponent,
     PersonsListComponent
-    // Do NOT declare PersonDetailComponent, AboutComponent, or ContactComponent if they are standalone.
+    // 🚫 Do not declare standalone components
   ],
   imports: [
     BrowserModule,
-    BrowserAnimationsModule,  // Added for Angular animations
+    BrowserAnimationsModule,
     HttpClientModule,
     FormsModule,
-    RouterModule.forRoot(routes),
-    // Import standalone components here
+    AppRoutingModule,
+
+    // ✅ Standalone component imports
+    LogoutComponent,
     PersonDetailComponent,
+    PersonCreateComponent,
+    PersonEditComponent,
     AboutComponent,
     ContactComponent
   ],
-  providers: [],
+  providers: [AuthGuard],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

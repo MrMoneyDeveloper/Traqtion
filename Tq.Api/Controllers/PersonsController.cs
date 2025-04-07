@@ -21,7 +21,6 @@ namespace Tq.Api.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Person>> GetPersons()
         {
-            // Include Accounts and their Transactions
             var persons = _context.Persons
                                   .Include(p => p.Accounts)
                                   .ThenInclude(a => a.Transactions)
@@ -47,7 +46,6 @@ namespace Tq.Api.Controllers
         [HttpPost]
         public IActionResult CreatePerson([FromBody] Person person)
         {
-            // Check for unique ID Number.
             if (_context.Persons.Any(p => p.IdNumber == person.IdNumber))
             {
                 return BadRequest("A person with this ID number already exists.");
@@ -66,8 +64,6 @@ namespace Tq.Api.Controllers
             if (existing == null)
                 return NotFound("Person not found.");
 
-            // Update person details.
-            // Note: Updating IdNumber should also be validated for uniqueness if allowed.
             existing.FirstName = updated.FirstName;
             existing.LastName = updated.LastName;
             existing.IdNumber = updated.IdNumber;
@@ -88,14 +84,19 @@ namespace Tq.Api.Controllers
             if (person == null)
                 return NotFound("Person not found.");
 
-            // Use the model's CanBeDeleted helper to enforce deletion rules.
-            if (!person.CanBeDeleted())
+            var openAccounts = person.Accounts
+                                     .Where(a => a.Status == AccountStatus.Open)
+                                     .ToList();
+
+            if (openAccounts.Any())
             {
-                return BadRequest("Cannot delete a person with open accounts.");
+                var accountNumbers = string.Join(", ", openAccounts.Select(a => a.AccountNumber));
+                return BadRequest($"Cannot delete person because they have open account(s): {accountNumbers}.");
             }
 
             _context.Persons.Remove(person);
             _context.SaveChanges();
+
             return NoContent();
         }
 
@@ -111,11 +112,12 @@ namespace Tq.Api.Controllers
             }
 
             term = term.ToLower();
-            // Search in IdNumber, LastName, or within related Accounts by AccountNumber.
+
             var results = _context.Persons
                 .Include(p => p.Accounts)
                 .Where(p =>
                     p.IdNumber.ToLower().Contains(term) ||
+                    p.FirstName.ToLower().Contains(term) ||
                     p.LastName.ToLower().Contains(term) ||
                     p.Accounts.Any(a => a.AccountNumber.ToLower().Contains(term))
                 ).ToList();
