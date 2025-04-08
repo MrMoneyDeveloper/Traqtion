@@ -1,69 +1,110 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule, NgForm } from '@angular/forms';
 import { PersonService, Person } from '../services/persons.service';
 
 @Component({
   selector: 'app-person-detail',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="container mt-4">
-      <div *ngIf="isLoading" class="alert alert-info">Loading person details...</div>
-      <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
-      <div *ngIf="person && !isLoading">
-        <h2>{{ person.firstName }} {{ person.lastName }}</h2>
-        <p><strong>ID Number:</strong> {{ person.idNumber }}</p>
-        <p><strong>Date of Birth:</strong> {{ person.dateOfBirth | date }}</p>
-        <h3>Accounts</h3>
-        <ul>
-          <li *ngFor="let account of person.accounts">
-            {{ account.accountNumber }} - Status: {{ account.status }} - 
-            Balance: {{ account.outstandingBalance | currency }}
-          </li>
-        </ul>
-        <button class="btn btn-secondary" (click)="goBack()">Back to List</button>
-      </div>
-    </div>
-  `
+  imports: [CommonModule, FormsModule, RouterModule],
+  templateUrl: './person-detail.component.html'
 })
-export class PersonDetailComponent implements OnInit {
-  person: Person | null = null;
+export class PersonDetailsComponent implements OnInit {
+  person: Person = {
+    personId: 0,
+    idNumber: '',
+    firstName: '',
+    lastName: '',
+    dateOfBirth: '',
+    accounts: []  // Ensure accounts is always defined (initialized to empty array)
+  };
+
   isLoading = false;
   errorMessage = '';
+  editMode = false;
 
   constructor(
     private route: ActivatedRoute,
-    private personService: PersonService,
-    private router: Router
+    private router: Router,
+    private personService: PersonService
   ) { }
 
   ngOnInit(): void {
-    this.loadPerson();
+    const idParam = this.route.snapshot.paramMap.get('id');
+    if (idParam && idParam !== 'new') {
+      const parsedId = Number(idParam);
+      if (!Number.isFinite(parsedId) || parsedId <= 0) {
+        this.errorMessage = 'Invalid person ID.';
+        return;
+      }
+      this.isLoading = true;
+      this.personService.getPerson(parsedId).subscribe({
+        next: (data: Person | undefined) => {
+          if (data) {
+            // Guarantee that accounts is always defined (use empty array if undefined)
+            this.person = { ...data, accounts: data.accounts ?? [] };
+            this.editMode = true;
+          } else {
+            this.errorMessage = 'Person not found.';
+          }
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Failed to load person:', err);
+          this.errorMessage = 'Failed to load person data.';
+          this.isLoading = false;
+        }
+      });
+    } else {
+      // "new" person route
+      this.editMode = true;
+    }
   }
 
-  loadPerson(): void {
-    this.isLoading = true;
-    const idParam = this.route.snapshot.paramMap.get('id');
-    const personId = Number(idParam);
-
-    if (!personId || isNaN(personId)) {
-      this.errorMessage = 'Invalid person ID provided.';
-      this.isLoading = false;
-      return;
+  save(form: NgForm): void {
+    if (form.invalid) return;
+    if (this.person.personId !== undefined && this.person.personId > 0) {
+      const id = this.person.personId;
+      this.personService.updatePerson(id, this.person).subscribe({
+        next: () => this.router.navigate(['/persons']),
+        error: (err) => {
+          console.error('Failed to save person:', err);
+          this.errorMessage = err?.error || 'Failed to save person.';
+        }
+      });
+    } else {
+      this.personService.createPerson(this.person).subscribe({
+        next: () => this.router.navigate(['/persons']),
+        error: (err) => {
+          console.error('Failed to save person:', err);
+          this.errorMessage = err?.error || 'Failed to save person.';
+        }
+      });
     }
+  }
 
-    this.personService.getPerson(personId).subscribe({
-      next: (data) => {
-        this.person = data;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error loading person details:', err);
-        this.errorMessage = 'Error loading person details. Please try again later.';
-        this.isLoading = false;
-      }
-    });
+  cancel(): void {
+    this.router.navigate(['/persons']);
+  }
+
+  addAccount(): void {
+    const id = this.person.personId;
+    if (typeof id === 'number' && id > 0) {
+      this.router.navigate(['/accounts/new'], {
+        queryParams: { personId: id }
+      });
+    } else {
+      alert('Cannot add account: Invalid person ID.');
+    }
+  }
+
+  editAccount(accountId: number | undefined): void {
+    if (accountId !== undefined && accountId > 0) {
+      this.router.navigate(['/accounts/edit', accountId]);
+    } else {
+      alert('Invalid account ID.');
+    }
   }
 
   goBack(): void {

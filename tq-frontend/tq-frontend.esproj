@@ -8,7 +8,6 @@
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist\tq-frontend\browser\</BuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="src\app\accounts\" />
     <Folder Include="src\app\logout\" />
   </ItemGroup>
 </Project>

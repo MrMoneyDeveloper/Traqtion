@@ -4,29 +4,27 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
-import { AppRoutingModule } from './app-routing.module'; // ✅ Correct path
+import { AppRoutingModule } from './app-routing.module';
 import { AuthGuard } from './guards/auth.guard';
 
-// Core App Components (non-standalone)
+// Non-standalone components
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
-import { LoginComponent } from './login/login.component';
-import { PersonsListComponent } from './persons/persons-list.component';
 
-// Standalone Components (must be imported, not declared)
+// Standalone components (import only, do NOT declare)
+import { PersonsListComponent } from './persons/persons-list.component';
+import { LoginComponent } from './login/login.component';
 import { LogoutComponent } from './logout/logout.component';
-import { PersonDetailComponent } from './persons/person-detail.component';
-import { PersonCreateComponent } from './persons/person-create.component';
-import { PersonEditComponent } from './persons/person-edit.component';
 import { AboutComponent } from './about/about.component';
 import { ContactComponent } from './contact/contact.component';
+import { PersonDetailsComponent } from './persons/person-detail.component';
+import { AccountDetailsComponent } from './accounts/account-detail.component';
+import { TransactionDetailsComponent } from './transactions/transaction-detail.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent,
-    PersonsListComponent
-    // 🚫 Do not declare standalone components
+    HomeComponent
   ],
   imports: [
     BrowserModule,
@@ -35,14 +33,15 @@ import { ContactComponent } from './contact/contact.component';
     FormsModule,
     AppRoutingModule,
 
-    // ✅ Standalone component imports
+    // Import standalone components
+    PersonsListComponent,
     LoginComponent,
     LogoutComponent,
-    PersonDetailComponent,
-    PersonCreateComponent,
-    PersonEditComponent,
     AboutComponent,
-    ContactComponent
+    ContactComponent,
+    PersonDetailsComponent,
+    AccountDetailsComponent,
+    TransactionDetailsComponent
   ],
   providers: [AuthGuard],
   bootstrap: [AppComponent]

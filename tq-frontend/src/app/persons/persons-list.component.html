@@ -1,73 +1,93 @@
-<div class="container mt-4">
+<div class="container py-4">
   <h2 class="mb-4">Persons List</h2>
 
-  <!-- Search and Add Section -->
+  <!-- Search & Add -->
   <div class="row mb-3 align-items-end">
     <div class="col-md-4">
       <label class="form-label">Search</label>
-      <input type="text"
-             class="form-control"
-             [(ngModel)]="searchTerm"
+      <input type="text" class="form-control" [(ngModel)]="searchTerm"
              placeholder="Search by ID, surname, or account #" />
     </div>
     <div class="col-md-2">
       <button class="btn btn-primary w-100" (click)="onSearch()">Search</button>
     </div>
     <div class="col-md-3 offset-md-3 text-end">
-      <button class="btn btn-success w-100" (click)="createPerson()">Add New Person</button>
+      <button class="btn btn-success w-100" (click)="createPerson()">
+        <i class="bi bi-person-plus"></i> Add New Person
+      </button>
     </div>
   </div>
 
-  <!-- Loading Indicator -->
+  <!-- Loading and Error -->
   <div *ngIf="isLoading" class="alert alert-info">
+    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
     Loading persons...
   </div>
-
-  <!-- Error Message -->
-  <div *ngIf="errorMessage" class="alert alert-danger">
-    {{ errorMessage }}
-  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
 
   <!-- Persons Table -->
-  <table *ngIf="!isLoading && persons.length" class="table table-hover">
+  <table *ngIf="!isLoading && pagedPersons().length > 0" class="table table-hover table-bordered">
     <thead class="table-light">
       <tr>
         <th>ID Number</th>
-        <th>First Name</th>
-        <th>Last Name</th>
+        <th>Name</th>
+        <th>Birth Date</th>
+        <th>Accounts</th>
         <th class="text-end">Actions</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let person of persons">
+      <tr *ngFor="let person of pagedPersons()">
         <td>{{ person.idNumber }}</td>
-        <td>{{ person.firstName }}</td>
-        <td>{{ person.lastName }}</td>
+        <td>{{ person.firstName }} {{ person.lastName }}</td>
+        <td>{{ person.dateOfBirth | date }}</td>
+        <td>{{ person.accounts?.length ?? 0 }}</td>
         <td class="text-end">
-          <button class="btn btn-info btn-sm me-2"
-                  (click)="editPerson(person.personId!)"
-                  title="Edit">
+          <button class="btn btn-sm btn-info me-1"
+                  (click)="viewDetails(person.personId)" title="View">
+            Details
+          </button>
+          <button class="btn btn-sm btn-primary me-1"
+                  (click)="editPerson(person.personId)" title="Edit">
             Edit
           </button>
-
-          <button class="btn btn-danger btn-sm me-2"
-                  (click)="deletePerson(person.personId!)"
-                  title="Delete">
+          <button class="btn btn-sm btn-danger"
+                  (click)="deletePerson(person.personId)" title="Delete">
             Delete
-          </button>
-
-          <button class="btn btn-secondary btn-sm"
-                  (click)="viewDetails(person.personId!)"
-                  title="View Details">
-            Details
           </button>
         </td>
       </tr>
     </tbody>
   </table>
 
-  <!-- No Persons Message -->
-  <div *ngIf="!isLoading && persons.length === 0" class="alert alert-warning">
+  <!-- Empty Message -->
+  <div *ngIf="!isLoading && pagedPersons().length === 0" class="alert alert-warning text-center">
     No persons found.
+  </div>
+
+  <!-- Pagination Controls -->
+  <div *ngIf="pagedPersons().length > 0" class="d-flex justify-content-between align-items-center mt-3">
+    <div>
+      Showing {{ pagedPersons().length }} of {{ filteredPersons().length }} persons
+    </div>
+    <ul class="pagination mb-0">
+      <li class="page-item" [class.disabled]="currentPage === 1">
+        <button class="page-link" (click)="changePage(currentPage - 1)">«</button>
+      </li>
+      <li *ngFor="let page of totalPages()" class="page-item"
+          [class.active]="page === currentPage">
+        <button class="page-link" (click)="changePage(page)">{{ page }}</button>
+      </li>
+      <li class="page-item" [class.disabled]="currentPage === totalPages().length">
+        <button class="page-link" (click)="changePage(currentPage + 1)">»</button>
+      </li>
+    </ul>
+    <div>
+      <select class="form-select form-select-sm d-inline-block w-auto"
+              [(ngModel)]="pageSize" (change)="changePage(1)">
+        <option [value]="5">5 per page</option>
+        <option [value]="10">10 per page</option>
+      </select>
+    </div>
   </div>
 </div>

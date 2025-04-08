@@ -5,12 +5,13 @@ import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Person {
-  personId?: number;  // Optional for new person creation
+  personId?: number;
   idNumber: string;
   firstName: string;
   lastName: string;
   dateOfBirth: string;
   accounts?: any[];
+  accountsCount?: number; // added to support template binding
 }
 
 @Injectable({
@@ -20,9 +21,7 @@ export class PersonService {
   private apiUrl = environment.apiUrl;
 
   private httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json'
-    })
+    headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
   constructor(private http: HttpClient) { }
@@ -47,28 +46,22 @@ export class PersonService {
       .pipe(catchError(this.handleError));
   }
 
-  deletePerson(id: number): Observable<{}> {
-    return this.http.delete(`${this.apiUrl}/persons/${id}`, this.httpOptions)
+  deletePerson(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/persons/${id}`, this.httpOptions)
       .pipe(catchError(this.handleError));
   }
 
   searchPersons(term: string): Observable<Person[]> {
-    if (!term.trim()) {
-      return this.getPersons();
-    }
-    const encodedTerm = encodeURIComponent(term);
-    return this.http.get<Person[]>(`${this.apiUrl}/persons/search?term=${encodedTerm}`, this.httpOptions)
+    const encoded = encodeURIComponent(term.trim());
+    return this.http.get<Person[]>(`${this.apiUrl}/persons/search?term=${encoded}`, this.httpOptions)
       .pipe(catchError(this.handleError));
   }
 
   private handleError(error: HttpErrorResponse) {
     console.error('PersonService error:', error);
-    let errorMsg = 'An error occurred; please try again later.';
-    if (error.error instanceof ErrorEvent) {
-      errorMsg = `Client-side error: ${error.error.message}`;
-    } else {
-      errorMsg = `Server returned code ${error.status}, error: ${error.message}`;
-    }
+    const errorMsg = error.error instanceof ErrorEvent
+      ? `Client-side error: ${error.error.message}`
+      : `Server error (${error.status}): ${error.message}`;
     return throwError(() => new Error(errorMsg));
   }
 }

@@ -3,20 +3,25 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
     "outDir": "./dist/out-tsc",
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "target": "ES2020",
-    "module": "ES2020",
-    "moduleResolution": "node",
-    "importHelpers": true
+    "baseUrl": "./",
+    "paths": {
+      "@angular/*": [ "node_modules/@angular/*" ]
+    },
+    "types": []
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
