@@ -1,12 +1,23 @@
-import { enableProdMode } from '@angular/core';
-import { platformBrowser } from '@angular/platform-browser';
+import { enableProdMode, importProvidersFrom } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { FormsModule } from '@angular/forms';
+
+import { routes } from './app/app.routes';
 import { environment } from './environments/environment';
-import { AppModule } from './app/app.module';
 
 if (environment.production) {
   enableProdMode();
 }
 
-platformBrowser().bootstrapModule(AppModule, {
-  ngZoneEventCoalescing: true
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(),
+    provideAnimations(),
+    importProvidersFrom(FormsModule)
+  ]
 }).catch(err => console.error(err));

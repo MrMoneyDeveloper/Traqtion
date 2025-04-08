@@ -7,11 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AuthGuard } from './guards/auth.guard';
 
-// Non-standalone components
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
-
-// Standalone components (import only, do NOT declare)
 import { PersonsListComponent } from './persons/persons-list.component';
 import { LoginComponent } from './login/login.component';
 import { LogoutComponent } from './logout/logout.component';
@@ -24,16 +21,7 @@ import { TransactionDetailsComponent } from './transactions/transaction-detail.c
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent
-  ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    HttpClientModule,
-    FormsModule,
-    AppRoutingModule,
-
-    // Import standalone components
+    HomeComponent,
     PersonsListComponent,
     LoginComponent,
     LogoutComponent,
@@ -43,7 +31,14 @@ import { TransactionDetailsComponent } from './transactions/transaction-detail.c
     AccountDetailsComponent,
     TransactionDetailsComponent
   ],
-  providers: [AuthGuard],
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    HttpClientModule,
+    FormsModule,
+    AppRoutingModule
+  ],
+  
   bootstrap: [AppComponent]
 })
 export class AppModule { }

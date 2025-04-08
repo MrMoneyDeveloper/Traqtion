@@ -1,17 +1,17 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  standalone: false  // explicitly mark as non-standalone
+  standalone: true,
+  imports: [RouterModule, CommonModule],
+  templateUrl: './app.component.html'
 })
 export class AppComponent {
   title = 'Tq Frontend';
 
-  constructor(private router: Router) { }
-
   logout(): void {
-    this.router.navigate(['/login']);
+    window.location.href = '/login';
   }
 }
