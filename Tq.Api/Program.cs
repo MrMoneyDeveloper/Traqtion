@@ -8,13 +8,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add controllers with JSON options to avoid reference cycle issues.
+// Add controllers with JSON options to ignore cycles in object graphs.
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
-// Configure CORS policy to allow Angular front-end during development.
+// Configure CORS policy for Angular development.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
@@ -23,19 +23,23 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
-// Swagger setup (optional).
+// Optional: Enable Swagger for API documentation.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Middleware configuration.
+// Use HTTPS redirection.
 app.UseHttpsRedirection();
+
+// Use the CORS policy.
 app.UseCors("AllowAngularDev");
-// app.UseAuthentication(); // Uncomment if using authentication
+
+// Uncomment and configure the following if you add authentication/authorization.
+// app.UseAuthentication();
 // app.UseAuthorization();
 
-// Enable Swagger in development mode.
+// Enable Swagger only in Development environment.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -45,12 +49,12 @@ if (app.Environment.IsDevelopment())
 // Map controller endpoints.
 app.MapControllers();
 
-// Ensure database and seed data (plug-and-play initialization).
+// Automatically apply pending migrations and seed the database.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();         // Automatically apply migrations
-    SeedData.Initialize(db);      // Seed data and create SPs/views
+    db.Database.Migrate();
+    SeedData.Initialize(db);
 }
 
 app.Run();

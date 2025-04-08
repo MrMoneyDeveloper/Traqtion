@@ -19,34 +19,30 @@ namespace Tq.Api.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // --- Person Configuration ---
+            // Unique index for Person.IdNumber.
             modelBuilder.Entity<Person>()
                 .HasIndex(p => p.IdNumber)
                 .IsUnique();
 
-            // --- Account Configuration ---
+            // Unique index for Account.AccountNumber.
             modelBuilder.Entity<Account>()
                 .HasIndex(a => a.AccountNumber)
                 .IsUnique();
 
-            modelBuilder.Entity<Account>()
-                .HasIndex(a => a.PersonId); // For performance on joins/filtering
-
+            // Map the AccountStatus enum to its string representation.
             modelBuilder.Entity<Account>()
                 .Property(a => a.Status)
-                .HasConversion<string>(); // Enum to string
+                .HasConversion<string>();
 
-            // --- Transaction Configuration ---
-            modelBuilder.Entity<Transaction>()
-                .HasIndex(t => t.AccountId); // For performance on joins/filtering
-
+            // Configure decimal precision for Transaction.Amount.
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.Amount)
-                .HasPrecision(18, 2); // Set decimal precision
+                .HasPrecision(18, 2);
 
+            // Set a default value for Transaction.CaptureDate using SQL (if not set by code).
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.CaptureDate)
-                .HasDefaultValueSql("GETDATE()"); // SQL default if not explicitly set
+                .HasDefaultValueSql("GETDATE()");
         }
     }
 }
