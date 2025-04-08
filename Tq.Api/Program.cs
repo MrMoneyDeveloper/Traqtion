@@ -8,13 +8,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add controllers with JSON options to ignore cycles in object graphs.
+// Add controllers with JSON options to avoid reference cycle issues.
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
-// Configure CORS policy for Angular development.
+// Configure CORS policy to allow Angular front-end during development.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
@@ -23,23 +23,19 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
-// Optional: Enable Swagger for API documentation.
+// Swagger setup (optional).
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Use HTTPS redirection.
+// Middleware configuration.
 app.UseHttpsRedirection();
-
-// Use the CORS policy.
 app.UseCors("AllowAngularDev");
-
-// Uncomment and configure the following if you add authentication/authorization.
-// app.UseAuthentication();
+// app.UseAuthentication(); // Uncomment if using authentication
 // app.UseAuthorization();
 
-// Enable Swagger only in Development environment.
+// Enable Swagger in development mode.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -49,12 +45,12 @@ if (app.Environment.IsDevelopment())
 // Map controller endpoints.
 app.MapControllers();
 
-// Automatically apply pending migrations and seed the database.
+// Ensure database and seed data (plug-and-play initialization).
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-    SeedData.Initialize(db);
+    db.Database.Migrate();         // Automatically apply migrations
+    SeedData.Initialize(db);      // Seed data and create SPs/views
 }
 
 app.Run();
