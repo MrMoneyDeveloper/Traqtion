@@ -14,11 +14,13 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
-// Configure CORS policy to allow Angular front-end during development.
+// Configure very open CORS policy so the demo front end can communicate with
+// the API whether it is served from the ASP.NET application or a static file
+// during development.
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngularDev", policy =>
-        policy.WithOrigins("http://localhost:63528")
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
@@ -31,7 +33,7 @@ var app = builder.Build();
 
 // Middleware configuration.
 app.UseHttpsRedirection();
-app.UseCors("AllowAngularDev");
+app.UseCors("AllowAll");
 // app.UseAuthentication(); // Uncomment if using authentication
 // app.UseAuthorization();
 
@@ -42,8 +44,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Serve the compiled front-end from wwwroot
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 // Map controller endpoints.
 app.MapControllers();
+
+// For unknown routes fall back to the SPA entry point
+app.MapFallbackToFile("index.html");
 
 // Ensure database and seed data (plug-and-play initialization).
 using (var scope = app.Services.CreateScope())
